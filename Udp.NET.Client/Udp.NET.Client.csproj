@@ -9,8 +9,8 @@
     <PackageProjectUrl>https://github.com/LiveOrDevTrying/Tcp.NET</PackageProjectUrl>
     <RepositoryUrl>https://github.com/LiveOrDevTrying/Tcp.NET</RepositoryUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <PackageTags>Tcp server client Tcp.NET TcpNET async dotnet net SSL authorization auth authentication liveordevtrying await async</PackageTags>
-    <Description>The client module for a simple SSL or non-SSL Tcp Client with authentication.</Description>
+    <PackageTags>Udp server client Udp.NET UdpNET async dotnet net SSL authorization auth authentication liveordevtrying await async</PackageTags>
+    <Description>The client module for a simple Udp Client with authentication.</Description>
     <Copyright>Copyright 2023</Copyright>
     <PackageIcon>Logo.png</PackageIcon>
     <RepositoryType>GitHub</RepositoryType>
