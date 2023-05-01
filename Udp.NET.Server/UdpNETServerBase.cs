@@ -3,15 +3,13 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Udp.NET.Server.Handlers;
-using Udp.NET.Server.Managers;
 using PHS.Networking.Server.Events.Args;
 using Udp.NET.Server.Events.Args;
 using PHS.Networking.Server.Enums;
 using PHS.Networking.Server.Services;
 using System;
-using PHS.Networking.Enums;
-using Udp.NET.Server.Events.Args;
 using PHS.Networking.Server.Managers;
+using System.Linq;
 
 namespace Udp.NET.Server
 {
@@ -39,6 +37,12 @@ namespace Udp.NET.Server
             if (!_connectionManager.GetConnection(args.UdpReceiveResult.RemoteEndPoint.Serialize().ToString(), out var connection))
             {
                 connection = CreateConnection(args.UdpReceiveResult);
+
+                if (_parameters.PingIntervalSec > 0)
+                {
+                    connection.NextPing = DateTime.UtcNow.AddSeconds(_parameters.PingIntervalSec);
+                }
+
                 _connectionManager.AddConnection(connection.IpEndpoint.Serialize().ToString(), connection);
             }
 
@@ -57,7 +61,7 @@ namespace Udp.NET.Server
                 switch (args.ServerEventType)
                 {
                     case ServerEventType.Start:
-                        _timerPing = new Timer(OnTimerPingTick, args.CancellationToken, _parameters.PingIntervalSec * 1000, _parameters.PingIntervalSec * 1000);
+                        _timerPing = new Timer(OnTimerPingTick, args.CancellationToken, 5 * 1000, 5 * 1000);
                         break;
                     case ServerEventType.Stop:
                         break;
@@ -76,7 +80,7 @@ namespace Udp.NET.Server
 
                 Task.Run(async () =>
                 {
-                    foreach (var connection in _connectionManager.GetAllConnections())
+                    foreach (var connection in _connectionManager.GetAllConnections().Where(x => x.NextPing <= DateTime.UtcNow))
                     {
                         try
                         {
@@ -88,6 +92,7 @@ namespace Udp.NET.Server
                             else
                             {
                                 connection.HasBeenPinged = true;
+                                connection.NextPing = DateTime.UtcNow.AddSeconds(_parameters.PingIntervalSec);
                                 await SendToConnectionAsync(_parameters.PingBytes, connection, (CancellationToken)state).ConfigureAwait(false);
                             }
                         }
