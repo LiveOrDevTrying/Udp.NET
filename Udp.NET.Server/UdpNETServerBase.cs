@@ -36,7 +36,7 @@ namespace Udp.NET.Server
 
         protected virtual void OnReceivedEvent(object sender, UdpReceivedEventArgs args)
         {
-            if (!_connectionManager.Get(args.UdpReceiveResult.RemoteEndPoint.Serialize().ToString(), out var connection))
+            if (!_connectionManager.GetConnection(args.UdpReceiveResult.RemoteEndPoint.Serialize().ToString(), out var connection))
             {
                 connection = CreateConnection(args.UdpReceiveResult);
                 _connectionManager.AddConnection(connection.IpEndpoint.Serialize().ToString(), connection);
@@ -76,17 +76,13 @@ namespace Udp.NET.Server
 
                 Task.Run(async () =>
                 {
-                    foreach (var connection in _connectionManager.GetAll())
+                    foreach (var connection in _connectionManager.GetAllConnections())
                     {
                         try
                         {
                             if (connection.HasBeenPinged)
                             {
-                                // Already been pinged, no response, disconnect
-                                if (!_parameters.OnlyEmitBytes)
-                                {
-                                    await SendToConnectionAsync("No ping response - disconnected.", connection, (CancellationToken)state).ConfigureAwait(false);
-                                }
+                                await SendToConnectionAsync("No ping response - disconnected.", connection, (CancellationToken)state).ConfigureAwait(false);
                                 await DisconnectConnectionAsync(connection, (CancellationToken)state).ConfigureAwait(false);
                             }
                             else

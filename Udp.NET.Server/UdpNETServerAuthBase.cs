@@ -119,10 +119,12 @@ namespace Udp.NET.Server
                             }
                             else
                             {
-                                Ar
-                                await SendToConnectionAsync(_parameters.ConnectionUnauthorizedString, args.Connection, args.CancellationToken).ConfigureAwait(false);
+                                if (!string.IsNullOrWhiteSpace(_parameters.ConnectionUnauthorizedString))
+                                {
+                                    await SendToConnectionAsync(_parameters.ConnectionUnauthorizedString, args.Connection, args.CancellationToken).ConfigureAwait(false);
                                 
-                                await DisconnectConnectionAsync(args.Connection, args.CancellationToken).ConfigureAwait(false);
+                                    await DisconnectConnectionAsync(args.Connection, args.CancellationToken).ConfigureAwait(false);
+                                }
                             }
                         });
 

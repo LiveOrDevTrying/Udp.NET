@@ -14,7 +14,7 @@ namespace Udp.NET.Server.Managers
         {
             if (_users.TryGetValue(id, out var user))
             {
-                return user.GetAll();
+                return user.GetAllConnections();
             }
 
             return System.Array.Empty<Z>();
@@ -30,7 +30,7 @@ namespace Udp.NET.Server.Managers
                 }
             }
 
-            var user = new ConnectionManager<Z>(userOriginal.GetAllDictionary());
+            var user = new ConnectionManager<Z>(userOriginal.GetAllConnectionsDictionary());
             user.AddConnection(identity.ConnectionId, identity);
             return _users.TryUpdate(identity.UserId, user, userOriginal);
         }
@@ -46,7 +46,7 @@ namespace Udp.NET.Server.Managers
                 {
                     if (user.Value.RemoveConnection(id))
                     {
-                        if (user.Value.Count() == 0)
+                        if (user.Value.CountConnections() == 0)
                         {
                             userToRemove = user.Key;
                             removeUser = true;
