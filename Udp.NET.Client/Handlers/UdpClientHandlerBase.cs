@@ -2,17 +2,12 @@
 using PHS.Networking.Services;
 using PHS.Networking.Utilities;
 using System;
-using System.IO;
-using System.Net;
-using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Udp.NET.Client.Models;
 using Udp.NET.Core.Events.Args;
-using Udp.NET.Core.Models;
-using Udp.NET.Client.Models;
 
 namespace Udp.NET.Client.Handlers
 {
@@ -42,14 +37,7 @@ namespace Udp.NET.Client.Handlers
                         await DisconnectAsync(cancellationToken).ConfigureAwait(false);
                     }
 
-                    if (_parameters.IsSSL)
-                    {
-                        await CreateSSLConnectionAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await CreateNonSSLConnectionAsync(cancellationToken).ConfigureAwait(false);
-                    }
+                    await CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
                     
                     if (_connection != null && _connection.Socket.Connected && !cancellationToken.IsCancellationRequested)
                     {
@@ -283,7 +271,7 @@ namespace Udp.NET.Client.Handlers
             await DisconnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        protected virtual async Task CreateNonSSLConnectionAsync(CancellationToken cancellationToken)
+        protected virtual async Task CreateConnectionAsync(CancellationToken cancellationToken)
         {
             // Establish the remote endpoint for the socket.  
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
@@ -298,36 +286,6 @@ namespace Udp.NET.Client.Handlers
                 Socket = socket,
                 ConnectionId = Guid.NewGuid().ToString()
             });
-        }
-        protected virtual async Task CreateSSLConnectionAsync(CancellationToken cancellationToken)
-        {
-            // Establish the remote endpoint for the socket.
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
-            {
-                ReceiveTimeout = 60000
-            };
-
-            await socket.ConnectAsync(_parameters.Host, _parameters.Port, cancellationToken).ConfigureAwait(false);
-            var networkStream = new NetworkStream(socket);
-            var sslStream = new SslStream(networkStream);
-
-            await sslStream.AuthenticateAsClientAsync(new SslClientAuthenticationOptions
-            {
-                TargetHost = _parameters.Host
-            }, cancellationToken).ConfigureAwait(false);
-
-            if (sslStream.IsAuthenticated && sslStream.IsEncrypted && !cancellationToken.IsCancellationRequested)
-            {
-                _connection = CreateConnection(new ConnectionUdpClient
-                {
-                    Socket = socket,
-                    ConnectionId = Guid.NewGuid().ToString(),
-                });
-            }
-            else
-            {
-                throw new Exception("Could not create connection - SSL cert has validation problem.");
-            }
         }
         protected abstract Y CreateConnection(ConnectionUdpClient connection);
         protected abstract T CreateConnectionEventArgs(UdpConnectionEventArgs<Y> args);

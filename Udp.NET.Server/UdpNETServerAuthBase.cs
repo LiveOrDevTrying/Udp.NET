@@ -1,14 +1,11 @@
 ﻿using PHS.Networking.Enums;
 using PHS.Networking.Server.Services;
-using PHS.Networking.Utilities;
 using System.Threading;
 using System.Threading.Tasks;
 using Udp.NET.Server.Events.Args;
 using Udp.NET.Server.Handlers;
-using Udp.NET.Server.Managers;
 using Udp.NET.Server.Models;
-using Udp.NET.Server.Events.Args;
-using System;
+using PHS.Networking.Server.Managers;
 
 namespace Udp.NET.Server
 {
@@ -20,7 +17,7 @@ namespace Udp.NET.Server
         where V : UdpErrorServerAuthBaseEventArgs<Z, A>
         where W : ParamsUdpServerAuth
         where X : UdpHandlerServerBase<T, U, V, W, Z>
-        where Y : UdpConnectionManagerAuthBase<Z, A>
+        where Y : ConnectionManagerAuth<Z, A>
         where Z : IdentityUdpServer<A>
     {
         protected readonly IUserService<A> _userService;
@@ -53,7 +50,7 @@ namespace Udp.NET.Server
         {
             if (IsServerRunning)
             {
-                var connections = _connectionManager.GetAll(userId);
+                var connections = _connectionManager.GetAllConnectionsForUser(userId);
 
                 foreach (var connection in connections)
                 {
@@ -65,7 +62,7 @@ namespace Udp.NET.Server
         {
             if (IsServerRunning)
             {
-                var connections = _connectionManager.GetAll(userId);
+                var connections = _connectionManager.GetAllConnectionsForUser(userId);
 
                 foreach (var connection in connections)
                 {
@@ -80,7 +77,7 @@ namespace Udp.NET.Server
                 case ConnectionEventType.Connected:
                     break;
                 case ConnectionEventType.Disconnect:
-                    _connectionManager.RemoveConnection(args.Connection.IpEndpoint.Serialize().ToString());
+                    _connectionManager.RemoveConnection(args.Connection.ConnectionId);
                     break;
                 default:
                     break;
@@ -103,7 +100,7 @@ namespace Udp.NET.Server
                             {
                                 args.Connection.UserId = await _userService.GetIdAsync(args.Message, args.CancellationToken).ConfigureAwait(false);
                                 args.Connection.Authorized = true;
-                                _connectionManager.AddIdentity(args.Connection);
+                                _connectionManager.AddUser(args.Connection);
 
                                 if (!string.IsNullOrWhiteSpace(_parameters.ConnectionSuccessString))
                                 {

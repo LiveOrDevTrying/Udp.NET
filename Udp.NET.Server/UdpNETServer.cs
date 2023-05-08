@@ -3,7 +3,6 @@ using Udp.NET.Server.Handlers;
 using Udp.NET.Server.Managers;
 using Udp.NET.Server.Events.Args;
 using System.Net.Sockets;
-using System;
 
 namespace Udp.NET.Server
 {
@@ -27,7 +26,7 @@ namespace Udp.NET.Server
             return new UdpConnectionManager();
         }
 
-        protected override UdpHandlerServer CreateHandler(byte[] certificate = null, string certificatePassword = null)
+        protected override UdpHandlerServer CreateHandler()
         {
             return new UdpHandlerServer(_parameters);
         }
@@ -69,7 +68,7 @@ namespace Udp.NET.Server
         {
             return new ConnectionUdpServer
             {
-                ConnectionId = Guid.NewGuid().ToString(),
+                ConnectionId = udpReceiveResult.RemoteEndPoint.Serialize().ToString(),
                 IpEndpoint = udpReceiveResult.RemoteEndPoint
             };
         }

@@ -74,7 +74,7 @@ namespace Udp.NET.TestApps.Client
         {
             if (_clients.Count < _max)
             {
-                var client = new UdpNETClient(new ParamsUdpClient("localhost", 8989, "\r\n", token: "testToken", isSSL: false));
+                var client = new UdpNETClient(new ParamsUdpClient("localhost", 8989, "\r\n", token: "testToken"));
                 client.ConnectionEvent += OnConnectionEvent;
                 client.MessageEvent += OnMessageEvent;
                 client.ErrorEvent += OnErrorEvent;

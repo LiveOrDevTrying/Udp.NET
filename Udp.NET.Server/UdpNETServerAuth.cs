@@ -29,7 +29,7 @@ namespace Udp.NET.Server
         {
             return new UdpConnectionManagerAuth<T>();
         }
-        protected override UdpHandlerServerAuth<T> CreateHandler(byte[] certificate = null, string certificatePassword = null)
+        protected override UdpHandlerServerAuth<T> CreateHandler()
         {
             return new UdpHandlerServerAuth<T>(_parameters);
         }

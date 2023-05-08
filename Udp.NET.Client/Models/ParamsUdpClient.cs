@@ -14,13 +14,12 @@ namespace Udp.NET.Client.Models
         public bool UsePingPong { get; protected set; }
         public byte[] PingBytes { get; protected set; }
         public byte[] PongBytes { get; protected set; }
-        public bool IsSSL { get; protected set; }
         public bool OnlyEmitBytes { get; protected set; }
         public byte[] Token { get; protected set; }
         public bool UseDisconnectBytes { get; protected set; }
         public byte[] DisconnectBytes { get; protected set; }
 
-        public ParamsUdpClient(string host, int port, string endOfLineCharacters, string token = "", bool isSSL = true, bool onlyEmitBytes = false, bool usePingPong = true, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null)
+        public ParamsUdpClient(string host, int port, string endOfLineCharacters, string token = "", bool onlyEmitBytes = false, bool usePingPong = true, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null)
         {
             if (string.IsNullOrWhiteSpace(host))
             {
@@ -53,7 +52,6 @@ namespace Udp.NET.Client.Models
             UsePingPong = usePingPong;
             PingBytes = Encoding.UTF8.GetBytes(pingCharacters);
             PongBytes = Encoding.UTF8.GetBytes(pongCharacters);
-            IsSSL = isSSL;
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
@@ -68,7 +66,7 @@ namespace Udp.NET.Client.Models
                 DisconnectBytes = new byte[] { 3 };
             }
         }
-        public ParamsUdpClient(string host, int port, byte[] endOfLineBytes, string token = null, bool isSSL = true, bool onlyEmitBytes = true, bool usePingPong = true, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null)
+        public ParamsUdpClient(string host, int port, byte[] endOfLineBytes, string token = null, bool onlyEmitBytes = true, bool usePingPong = true, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null)
         {
             if (string.IsNullOrWhiteSpace(host))
             {
@@ -106,7 +104,6 @@ namespace Udp.NET.Client.Models
             UsePingPong = usePingPong;
             PingBytes = pingBytes;
             PongBytes = pongBytes;
-            IsSSL = isSSL;
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;

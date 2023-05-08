@@ -10,6 +10,7 @@ using PHS.Networking.Server.Services;
 using System;
 using PHS.Networking.Server.Managers;
 using System.Linq;
+using System.Text;
 
 namespace Udp.NET.Server
 {
@@ -34,7 +35,11 @@ namespace Udp.NET.Server
 
         protected virtual void OnReceivedEvent(object sender, UdpReceivedEventArgs args)
         {
-            if (!_connectionManager.GetConnection(args.UdpReceiveResult.RemoteEndPoint.Serialize().ToString(), out var connection))
+            var idBuffer = args.UdpReceiveResult.Buffer.Take(16).ToArray();
+            var buffer = args.UdpReceiveResult.Buffer.Skip(16);
+            var id = Encoding.UTF8.GetString(idBuffer);
+
+            if (!_connectionManager.GetConnection(id, out var connection))
             {
                 connection = CreateConnection(args.UdpReceiveResult);
 
@@ -43,7 +48,7 @@ namespace Udp.NET.Server
                     connection.NextPing = DateTime.UtcNow.AddSeconds(_parameters.PingIntervalSec);
                 }
 
-                _connectionManager.AddConnection(connection.IpEndpoint.Serialize().ToString(), connection);
+                _connectionManager.AddConnection(connection.ConnectionId, connection);
             }
 
             _handler.Receive(args.UdpReceiveResult.Buffer, connection, args.CancellationToken);
@@ -116,6 +121,23 @@ namespace Udp.NET.Server
         protected abstract T CreateConnectionEventArgs(UdpConnectionServerBaseEventArgs<Z> args);
         protected abstract U CreateMessageEventArgs(UdpMessageServerBaseEventArgs<Z> args);
         protected abstract V CreateErrorEventArgs(UdpErrorServerBaseEventArgs<Z> args);
+
+        protected override void FireEvent(object sender, ServerEventArgs args)
+        {
+            base.FireEvent(this, args);
+        }
+        protected override void FireEvent(object sender, T args)
+        {
+            base.FireEvent(this, args);
+        }
+        protected override void FireEvent(object sender, U args)
+        {
+            base.FireEvent(this, args);
+        }
+        protected override void FireEvent(object sender, V args)
+        {
+            base.FireEvent(this, args);
+        }
 
         public override void Dispose()
         {

@@ -23,7 +23,8 @@ namespace Udp.NET.Server.Handlers
             return new UdpConnectionServerEventArgs
             {
                 Connection = args.Connection,
-                ConnectionEventType = args.ConnectionEventType
+                ConnectionEventType = args.ConnectionEventType,
+                CancellationToken = args.CancellationToken
             };
         }
         protected override UdpMessageServerEventArgs CreateMessageEventArgs(UdpMessageServerBaseEventArgs<ConnectionUdpServer> args)
@@ -33,7 +34,8 @@ namespace Udp.NET.Server.Handlers
                 Connection = args.Connection,
                 Bytes = args.Bytes,
                 Message = args.Message,
-                MessageEventType = args.MessageEventType
+                MessageEventType = args.MessageEventType,
+                CancellationToken = args.CancellationToken
             };
         }
         protected override UdpErrorServerEventArgs CreateErrorEventArgs(ErrorEventArgs<ConnectionUdpServer> args)
@@ -42,7 +44,8 @@ namespace Udp.NET.Server.Handlers
             {
                 Connection = args.Connection,
                 Exception = args.Exception,
-                Message = args.Message
+                Message = args.Message,
+                CancellationToken = args.CancellationToken
             };
         }
     }

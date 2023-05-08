@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Udp.NET.Client.Handlers;
 using Udp.NET.Client.Models;
 using Udp.NET.Core.Events.Args;
-using Udp.NET.Core.Models;
-using Udp.NET.Client.Models;
 
 namespace Udp.NET.Client
 {

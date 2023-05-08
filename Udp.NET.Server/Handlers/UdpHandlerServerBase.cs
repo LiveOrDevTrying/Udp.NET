@@ -196,22 +196,19 @@ namespace Udp.NET.Server.Handlers
         {
             try
             {
-                if (connection != null)
+                if (_parameters.UseDisconnectBytes)
                 {
-                    if (_parameters.UseDisconnectBytes)
-                    {
-                        await SendAsync(_parameters.DisconnectBytes, connection, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    connection.Disposed = true;
-
-                    FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
-                    {
-                        ConnectionEventType = ConnectionEventType.Disconnect,
-                        Connection = connection,
-                        CancellationToken = cancellationToken
-                    }));
+                    await SendAsync(_parameters.DisconnectBytes, connection, cancellationToken).ConfigureAwait(false);
                 }
+
+                connection.Disposed = true;
+
+                FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
+                {
+                    ConnectionEventType = ConnectionEventType.Disconnect,
+                    Connection = connection,
+                    CancellationToken = cancellationToken
+                }));
 
                 return true;
             }
