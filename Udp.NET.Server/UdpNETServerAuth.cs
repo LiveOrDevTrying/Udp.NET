@@ -64,11 +64,11 @@ namespace Udp.NET.Server
                 CancellationToken = args.CancellationToken
             };
         }
-        protected override IdentityUdpServer<T> CreateConnection(UdpReceiveResult udpReceiveResult)
+        protected override IdentityUdpServer<T> CreateConnection(UdpReceiveResult udpReceiveResult, string connectionId)
         {
             return new IdentityUdpServer<T>
             {
-                ConnectionId = Guid.NewGuid().ToString(),
+                ConnectionId = connectionId,
                 IpEndpoint = udpReceiveResult.RemoteEndPoint
             };
         }

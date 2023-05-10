@@ -64,11 +64,11 @@ namespace Udp.NET.Server
             };
         }
 
-        protected override ConnectionUdpServer CreateConnection(UdpReceiveResult udpReceiveResult)
+        protected override ConnectionUdpServer CreateConnection(UdpReceiveResult udpReceiveResult, string connectionId)
         {
             return new ConnectionUdpServer
             {
-                ConnectionId = udpReceiveResult.RemoteEndPoint.Serialize().ToString(),
+                ConnectionId = connectionId,
                 IpEndpoint = udpReceiveResult.RemoteEndPoint
             };
         }

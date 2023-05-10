@@ -11,6 +11,7 @@ using System;
 using PHS.Networking.Server.Managers;
 using System.Linq;
 using System.Text;
+using PHS.Networking.Utilities;
 
 namespace Udp.NET.Server
 {
@@ -35,13 +36,13 @@ namespace Udp.NET.Server
 
         protected virtual void OnReceivedEvent(object sender, UdpReceivedEventArgs args)
         {
-            var idBuffer = args.UdpReceiveResult.Buffer.Take(16).ToArray();
-            var buffer = args.UdpReceiveResult.Buffer.Skip(16);
-            var id = Encoding.UTF8.GetString(idBuffer);
+            var idBuffer = Statics.ByteArraySeparate(args.UdpReceiveResult.Buffer, _parameters.PrefixTerminator);
+            var buffer = args.UdpReceiveResult.Buffer.Skip(idBuffer[0].Length + _parameters.PrefixTerminator.Length).ToArray();
+            var id = Encoding.UTF8.GetString(idBuffer[0]);
 
             if (!_connectionManager.GetConnection(id, out var connection))
             {
-                connection = CreateConnection(args.UdpReceiveResult);
+                connection = CreateConnection(args.UdpReceiveResult, id);
 
                 if (_parameters.PingIntervalSec > 0)
                 {
@@ -51,7 +52,7 @@ namespace Udp.NET.Server
                 _connectionManager.AddConnection(connection.ConnectionId, connection);
             }
 
-            _handler.Receive(args.UdpReceiveResult.Buffer, connection, args.CancellationToken);
+            _handler.Receive(buffer.ToArray(), connection, args.CancellationToken);
         }
         protected override void OnServerEvent(object sender, ServerEventArgs args)
         {
@@ -117,7 +118,7 @@ namespace Udp.NET.Server
             }
         }
 
-        protected abstract Z CreateConnection(UdpReceiveResult udpReceiveResult);
+        protected abstract Z CreateConnection(UdpReceiveResult udpReceiveResult, string connectionId);
         protected abstract T CreateConnectionEventArgs(UdpConnectionServerBaseEventArgs<Z> args);
         protected abstract U CreateMessageEventArgs(UdpMessageServerBaseEventArgs<Z> args);
         protected abstract V CreateErrorEventArgs(UdpErrorServerBaseEventArgs<Z> args);

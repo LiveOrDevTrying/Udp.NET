@@ -5,6 +5,7 @@ using PHS.Networking.Server.Events.Args;
 using PHS.Networking.Server.Handlers;
 using PHS.Networking.Utilities;
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -126,7 +127,7 @@ namespace Udp.NET.Server.Handlers
             {
                 if (!connection.Disposed && _isRunning)
                 {
-                    var bytes = Statics.ByteArrayAppend(Encoding.UTF8.GetBytes(message), _parameters.EndOfLineBytes);
+                    var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).Concat(_parameters.EndOfLineBytes).ToArray();
                     await _server.SendAsync(bytes, bytes.Length, connection.IpEndpoint).ConfigureAwait(false);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageServerBaseEventArgs<Z>
@@ -162,7 +163,7 @@ namespace Udp.NET.Server.Handlers
             {
                 if (!connection.Disposed && _isRunning)
                 {
-                    var bytes = Statics.ByteArrayAppend(message, _parameters.EndOfLineBytes);
+                    var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).Concat(_parameters.EndOfLineBytes).ToArray();
                     await _server.SendAsync(bytes, bytes.Length, connection.IpEndpoint).ConfigureAwait(false);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageServerBaseEventArgs<Z>

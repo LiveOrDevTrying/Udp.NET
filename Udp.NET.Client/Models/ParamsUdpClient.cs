@@ -18,8 +18,9 @@ namespace Udp.NET.Client.Models
         public byte[] Token { get; protected set; }
         public bool UseDisconnectBytes { get; protected set; }
         public byte[] DisconnectBytes { get; protected set; }
+        public byte[] PrefixTerminator { get; protected set; }
 
-        public ParamsUdpClient(string host, int port, string endOfLineCharacters, string token = "", bool onlyEmitBytes = false, bool usePingPong = true, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null)
+        public ParamsUdpClient(string host, int port, string endOfLineCharacters, string token = "", bool onlyEmitBytes = false, bool usePingPong = true, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null, string prefixTerminator = "\\")
         {
             if (string.IsNullOrWhiteSpace(host))
             {
@@ -46,6 +47,11 @@ namespace Udp.NET.Client.Models
                 throw new ArgumentException("Pong Characters are not valid");
             }
 
+            if (string.IsNullOrWhiteSpace(prefixTerminator))
+            {
+                throw new ArgumentException("Prefix Terminator is not valid");
+            }
+
             Host = host;
             Port = port;
             EndOfLineBytes = Encoding.UTF8.GetBytes(endOfLineCharacters);
@@ -55,6 +61,7 @@ namespace Udp.NET.Client.Models
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
+            PrefixTerminator = Encoding.UTF8.GetBytes(prefixTerminator);
 
             if (!string.IsNullOrWhiteSpace(token))
             {
@@ -66,7 +73,7 @@ namespace Udp.NET.Client.Models
                 DisconnectBytes = new byte[] { 3 };
             }
         }
-        public ParamsUdpClient(string host, int port, byte[] endOfLineBytes, string token = null, bool onlyEmitBytes = true, bool usePingPong = true, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null)
+        public ParamsUdpClient(string host, int port, byte[] endOfLineBytes, string token = null, bool onlyEmitBytes = true, bool usePingPong = true, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null, byte[] prefixTerminator = null)
         {
             if (string.IsNullOrWhiteSpace(host))
             {
@@ -98,6 +105,11 @@ namespace Udp.NET.Client.Models
                 pongBytes = Encoding.UTF8.GetBytes("pong");
             }
 
+            if (prefixTerminator == null || prefixTerminator.Where(x => x != 0).ToArray().Length <= 0)
+            {
+                prefixTerminator = Encoding.UTF8.GetBytes("\\");
+            }
+
             Host = host;
             Port = port;
             EndOfLineBytes = endOfLineBytes;
@@ -107,6 +119,7 @@ namespace Udp.NET.Client.Models
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
+            PrefixTerminator = prefixTerminator;
 
             if (!string.IsNullOrWhiteSpace(token))
             {

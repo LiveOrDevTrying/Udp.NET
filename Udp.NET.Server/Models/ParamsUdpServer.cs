@@ -16,8 +16,9 @@ namespace Udp.NET.Server.Models
         public bool OnlyEmitBytes { get; protected set; }
         public bool UseDisconnectBytes { get; protected set; }
         public byte[] DisconnectBytes { get; protected set; }
+        public byte[] PrefixTerminator { get; protected set; }
 
-        public ParamsUdpServer(int port, string endOfLineCharacters, string connectionSuccessString = null, bool onlyEmitBytes = false, int pingIntervalSec = 120, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null) : base(port)
+        public ParamsUdpServer(int port, string endOfLineCharacters, string connectionSuccessString = null, bool onlyEmitBytes = false, int pingIntervalSec = 120, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null, string prefixTerminator = "\\") : base(port)
         {
             if (string.IsNullOrEmpty(endOfLineCharacters))
             {
@@ -39,6 +40,11 @@ namespace Udp.NET.Server.Models
                 throw new ArgumentException("onlyEmitBytes can not be true is a connectionSuccesString is specified");
             }
 
+            if (string.IsNullOrWhiteSpace(prefixTerminator))
+            {
+                throw new ArgumentException("Prefix Terminator is not valid");
+            }
+
             EndOfLineBytes = Encoding.UTF8.GetBytes(endOfLineCharacters);
             PingBytes = Encoding.UTF8.GetBytes(pingCharacters);
             PongBytes = Encoding.UTF8.GetBytes(pongCharacters);
@@ -47,6 +53,7 @@ namespace Udp.NET.Server.Models
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
+            PrefixTerminator = Encoding.UTF8.GetBytes(prefixTerminator);
             
             if (UseDisconnectBytes && (DisconnectBytes == null || Statics.ByteArrayEquals(DisconnectBytes, Array.Empty<byte>())))
             {
@@ -54,7 +61,7 @@ namespace Udp.NET.Server.Models
             }
         }
 
-        public ParamsUdpServer(int port, byte[] endOfLineBytes, string connectionSuccessString = null, bool onlyEmitBytes = false, int pingIntervalSec = 120, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null) : base(port)
+        public ParamsUdpServer(int port, byte[] endOfLineBytes, string connectionSuccessString = null, bool onlyEmitBytes = false, int pingIntervalSec = 120, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null, byte[] prefixTerminator = null) : base(port)
         {
             if (endOfLineBytes.Length <= 0 || endOfLineBytes.All(x => x == 0))
             {
@@ -76,6 +83,11 @@ namespace Udp.NET.Server.Models
                 throw new ArgumentException("onlyEmitBytes can not be true is a connectionSuccesString is specified");
             }
 
+            if (prefixTerminator == null || prefixTerminator.Where(x => x != 0).ToArray().Length <= 0)
+            {
+                prefixTerminator = Encoding.UTF8.GetBytes("\\");
+            }
+
             Port = port;
             EndOfLineBytes = endOfLineBytes;
             ConnectionSuccessString = connectionSuccessString;
@@ -85,6 +97,7 @@ namespace Udp.NET.Server.Models
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
+            PrefixTerminator = prefixTerminator;
 
             if (UseDisconnectBytes && (DisconnectBytes == null || Statics.ByteArrayEquals(DisconnectBytes, Array.Empty<byte>())))
             {

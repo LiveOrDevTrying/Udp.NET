@@ -2,6 +2,7 @@
 using PHS.Networking.Services;
 using PHS.Networking.Utilities;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -125,7 +126,7 @@ namespace Udp.NET.Client.Handlers
                     _connection.Socket.Connected &&
                     !cancellationToken.IsCancellationRequested)
                 {
-                    var bytes = Statics.ByteArrayAppend(Encoding.UTF8.GetBytes($"{message}"), _parameters.EndOfLineBytes);
+                    var bytes = Encoding.UTF8.GetBytes(_connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).Concat(_parameters.EndOfLineBytes).ToArray();
                     await _connection.Socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, cancellationToken).ConfigureAwait(false);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageEventArgs<Y>
@@ -164,7 +165,7 @@ namespace Udp.NET.Client.Handlers
                     _connection.Socket.Connected &&
                     !cancellationToken.IsCancellationRequested)
                 {
-                    var bytes = Statics.ByteArrayAppend(message, _parameters.EndOfLineBytes);
+                    var bytes = Encoding.UTF8.GetBytes(_connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).Concat(_parameters.EndOfLineBytes).ToArray();
                     await _connection.Socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, cancellationToken).ConfigureAwait(false);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageEventArgs<Y>
@@ -220,38 +221,43 @@ namespace Udp.NET.Client.Handlers
 
                     if (endOfMessage)
                     {
-                        var parts = Statics.ByteArraySeparate(buffer, _parameters.EndOfLineBytes);
+                        var prefix = Statics.ByteArraySeparate(buffer, _parameters.PrefixTerminator);
 
-                        for (int i = 0; i < parts.Length; i++)
+                        if (Encoding.UTF8.GetString(prefix[0]) == _connection.ConnectionId)
                         {
-                            if (_parameters.UseDisconnectBytes && Statics.ByteArrayEquals(parts[i], _parameters.DisconnectBytes))
-                            {
-                                _connection?.Dispose();
+                            var parts = Statics.ByteArraySeparate(buffer.Skip(prefix[0].Length + _parameters.PrefixTerminator.Length).ToArray(), _parameters.EndOfLineBytes);
 
-                                FireEvent(this, CreateConnectionEventArgs(new UdpConnectionEventArgs<Y>
+                            for (int i = 0; i < parts.Length; i++)
+                            {
+                                if (_parameters.UseDisconnectBytes && Statics.ByteArrayEquals(parts[i], _parameters.DisconnectBytes))
                                 {
-                                    ConnectionEventType = ConnectionEventType.Disconnect,
-                                    Connection = _connection,
-                                    CancellationToken = cancellationToken
-                                }));
+                                    _connection?.Dispose();
 
-                                _connection = null;
-                                return;
-                            }
-                            else if (_parameters.UsePingPong && Statics.ByteArrayEquals(parts[i], _parameters.PingBytes))
-                            {
-                                await SendAsync(_parameters.PongBytes, cancellationToken).ConfigureAwait(false);
-                            }
-                            else
-                            {
-                                FireEvent(this, CreateMessageEventArgs(new UdpMessageEventArgs<Y>
+                                    FireEvent(this, CreateConnectionEventArgs(new UdpConnectionEventArgs<Y>
+                                    {
+                                        ConnectionEventType = ConnectionEventType.Disconnect,
+                                        Connection = _connection,
+                                        CancellationToken = cancellationToken
+                                    }));
+
+                                    _connection = null;
+                                    return;
+                                }
+                                else if (_parameters.UsePingPong && Statics.ByteArrayEquals(parts[i], _parameters.PingBytes))
                                 {
-                                    MessageEventType = MessageEventType.Receive,
-                                    Connection = _connection,
-                                    Message = !_parameters.OnlyEmitBytes ? Encoding.UTF8.GetString(parts[i]) : null,
-                                    Bytes = parts[i],
-                                    CancellationToken = cancellationToken
-                                }));
+                                    await SendAsync(_parameters.PongBytes, cancellationToken).ConfigureAwait(false);
+                                }
+                                else
+                                {
+                                    FireEvent(this, CreateMessageEventArgs(new UdpMessageEventArgs<Y>
+                                    {
+                                        MessageEventType = MessageEventType.Receive,
+                                        Connection = _connection,
+                                        Message = !_parameters.OnlyEmitBytes ? Encoding.UTF8.GetString(parts[i]) : null,
+                                        Bytes = parts[i],
+                                        CancellationToken = cancellationToken
+                                    }));
+                                }
                             }
                         }
                     }

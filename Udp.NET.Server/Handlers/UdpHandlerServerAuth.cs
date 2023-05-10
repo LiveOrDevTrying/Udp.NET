@@ -22,29 +22,6 @@ namespace Udp.NET.Server.Handlers
         {
         }
 
-        public override void Receive(byte[] message, IdentityUdpServer<T> connection, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                if (connection.Authorized)
-                {
-                    base.Receive(message.Skip(16).ToArray(), connection, cancellationToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                FireEvent(this, CreateErrorEventArgs(new UdpErrorServerAuthEventArgs<T>
-                {
-                    Exception = ex,
-                    Message = ex.Message,
-                    Connection = connection,
-                    CancellationToken = cancellationToken
-                }));
-            }
-
-            base.Receive(message, connection, cancellationToken);
-        }
-
         protected override UdpConnectionServerAuthEventArgs<T> CreateConnectionEventArgs(ConnectionEventArgs<IdentityUdpServer<T>> args)
         {
             return new UdpConnectionServerAuthEventArgs<T>
