@@ -58,14 +58,7 @@ namespace Udp.NET.TestApps.Client
                 }
                 else
                 {
-                    try
-                    {
-                        await _clients.ToList().Where(x => x != null && x.IsRunning).OrderBy(x => Guid.NewGuid()).First().SendAsync(line);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Bad");
-                    }
+                    await _clients.ToList().Where(x => x != null && x.IsRunning).OrderBy(x => Guid.NewGuid()).First().SendAsync(line);
                 }
             }
         }
@@ -74,7 +67,7 @@ namespace Udp.NET.TestApps.Client
         {
             if (_clients.Count < _max)
             {
-                var client = new UdpNETClient(new ParamsUdpClient("localhost", 8989, "\r\n", token: "testToken"));
+                var client = new UdpNETClient(new ParamsUdpClient("localhost", 8989, token: "testToken"));
                 client.ConnectionEvent += OnConnectionEvent;
                 client.MessageEvent += OnMessageEvent;
                 client.ErrorEvent += OnErrorEvent;

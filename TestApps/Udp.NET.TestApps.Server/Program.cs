@@ -15,7 +15,7 @@ namespace Udp.NET.TestApps.Server
 
         static async Task Main(string[] args)
         {
-            _authServer = new UdpNETServerAuth<Guid>(new ParamsUdpServerAuth(8989, "\r\n", "Connected Successfully", "Not authorized"), new MockUserService()); ;
+            _authServer = new UdpNETServerAuth<Guid>(new ParamsUdpServerAuth(8989, "Connected Successfully", "Not authorized"), new MockUserService()); ;
             _authServer.MessageEvent += OnMessageEvent;
             _authServer.ServerEvent += OnServerEvent;
             _authServer.ConnectionEvent += OnConnectionEvent;

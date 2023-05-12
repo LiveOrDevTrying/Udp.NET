@@ -127,7 +127,7 @@ namespace Udp.NET.Server.Handlers
             {
                 if (!connection.Disposed && _isRunning)
                 {
-                    var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).Concat(_parameters.EndOfLineBytes).ToArray();
+                    var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).ToArray();
                     await _server.SendAsync(bytes, bytes.Length, connection.IpEndpoint).ConfigureAwait(false);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageServerBaseEventArgs<Z>
@@ -163,7 +163,7 @@ namespace Udp.NET.Server.Handlers
             {
                 if (!connection.Disposed && _isRunning)
                 {
-                    var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).Concat(_parameters.EndOfLineBytes).ToArray();
+                    var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).ToArray();
                     await _server.SendAsync(bytes, bytes.Length, connection.IpEndpoint).ConfigureAwait(false);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageServerBaseEventArgs<Z>
@@ -231,43 +231,33 @@ namespace Udp.NET.Server.Handlers
         {
             try
             {
-                var endOfMessage = Statics.ByteArrayContainsSequence(message, _parameters.EndOfLineBytes);
-
-                if (endOfMessage)
+                if (_parameters.UseDisconnectBytes && Statics.ByteArrayEquals(message, _parameters.DisconnectBytes))
                 {
-                    var parts = Statics.ByteArraySeparate(message, _parameters.EndOfLineBytes);
+                    connection.Disposed = true;
 
-                    for (int i = 0; i < parts.Length; i++)
+                    FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
                     {
-                        if (_parameters.UseDisconnectBytes && Statics.ByteArrayEquals(parts[i], _parameters.DisconnectBytes))
-                        {;
-                            connection.Disposed = true;
+                        ConnectionEventType = ConnectionEventType.Disconnect,
+                        Connection = connection,
+                        CancellationToken = cancellationToken
+                    }));
 
-                            FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
-                            {
-                                ConnectionEventType = ConnectionEventType.Disconnect,
-                                Connection = connection,
-                                CancellationToken = cancellationToken
-                            }));
-
-                            return;
-                        }
-                        else if (Statics.ByteArrayEquals(parts[i], _parameters.PongBytes))
-                        {
-                            connection.HasBeenPinged = false;
-                        }
-                        else
-                        {
-                            FireEvent(this, CreateMessageEventArgs(new UdpMessageServerBaseEventArgs<Z>
-                            {
-                                Connection = connection,
-                                Message = !_parameters.OnlyEmitBytes ? Encoding.UTF8.GetString(parts[i]) : null,
-                                MessageEventType = MessageEventType.Receive,
-                                Bytes = parts[i],
-                                CancellationToken = cancellationToken
-                            }));
-                        }
-                    }
+                    return;
+                }
+                else if (Statics.ByteArrayEquals(message, _parameters.PongBytes))
+                {
+                    connection.HasBeenPinged = false;
+                }
+                else
+                {
+                    FireEvent(this, CreateMessageEventArgs(new UdpMessageServerBaseEventArgs<Z>
+                    {
+                        Connection = connection,
+                        Message = !_parameters.OnlyEmitBytes ? Encoding.UTF8.GetString(message) : null,
+                        MessageEventType = MessageEventType.Receive,
+                        Bytes = message,
+                        CancellationToken = cancellationToken
+                    }));
                 }
             }
             catch (Exception ex)

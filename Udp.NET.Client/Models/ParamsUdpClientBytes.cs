@@ -1,10 +1,11 @@
 ﻿using PHS.Networking.Utilities;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Udp.NET.Client.Models
 {
-    public class ParamsUdpClient : IParamsUdpClient
+    public class ParamsUdpClientBytes : IParamsUdpClient
     {
         public string Host { get; protected set; }
         public int Port { get; protected set; }
@@ -17,7 +18,7 @@ namespace Udp.NET.Client.Models
         public byte[] DisconnectBytes { get; protected set; }
         public byte[] PrefixTerminator { get; protected set; }
 
-        public ParamsUdpClient(string host, int port, string token = "", bool onlyEmitBytes = false, bool usePingPong = true, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null, string prefixTerminator = "\\")
+        public ParamsUdpClientBytes(string host, int port, byte[] token = null, bool onlyEmitBytes = true, bool usePingPong = true, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null, byte[] prefixTerminator = null)
         {
             if (string.IsNullOrWhiteSpace(host))
             {
@@ -29,35 +30,36 @@ namespace Udp.NET.Client.Models
                 throw new ArgumentException("Port is not valid");
             }
 
-            if (usePingPong && string.IsNullOrEmpty(pingCharacters))
+            if (token != null && token.Where(x => x != 0).ToArray().Length <= 0)
             {
-                throw new ArgumentException("Ping Characters are not valid");
+                throw new ArgumentException("Token is not valid");
             }
 
-            if (usePingPong && string.IsNullOrEmpty(pongCharacters))
+            if (usePingPong && (pingBytes == null || pingBytes.Length <= 0 || Statics.ByteArrayEquals(pingBytes, Array.Empty<byte>())))
             {
-                throw new ArgumentException("Pong Characters are not valid");
+                pingBytes = Encoding.UTF8.GetBytes("ping");
             }
 
-            if (string.IsNullOrWhiteSpace(prefixTerminator))
+            if (usePingPong && (pongBytes == null || pongBytes.Length <= 0 || Statics.ByteArrayEquals(pongBytes, Array.Empty<byte>())))
             {
-                throw new ArgumentException("Prefix Terminator is not valid");
+                pongBytes = Encoding.UTF8.GetBytes("pong");
+            }
+
+            if (prefixTerminator == null || prefixTerminator.Where(x => x != 0).ToArray().Length <= 0)
+            {
+                prefixTerminator = Encoding.UTF8.GetBytes("\\");
             }
 
             Host = host;
             Port = port;
             UsePingPong = usePingPong;
-            PingBytes = Encoding.UTF8.GetBytes(pingCharacters);
-            PongBytes = Encoding.UTF8.GetBytes(pongCharacters);
+            PingBytes = pingBytes;
+            PongBytes = pongBytes;
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
-            PrefixTerminator = Encoding.UTF8.GetBytes(prefixTerminator);
-
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                Token = Encoding.UTF8.GetBytes(token);
-            }
+            PrefixTerminator = prefixTerminator;
+            Token = token;
 
             if (UseDisconnectBytes && (DisconnectBytes == null || Statics.ByteArrayEquals(DisconnectBytes, Array.Empty<byte>())))
             {

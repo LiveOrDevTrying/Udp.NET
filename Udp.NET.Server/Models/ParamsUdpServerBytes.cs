@@ -1,10 +1,11 @@
 ﻿using PHS.Networking.Utilities;
 using System;
+using System.Linq;
 using System.Text;
 
 namespace Udp.NET.Server.Models
 {
-    public class ParamsUdpServer : IParamsUdpServer
+    public class ParamsUdpServerBytes : IParamsUdpServer
     {
         public int Port { get; protected set; }
         public byte[] PingBytes { get; protected set; }
@@ -16,21 +17,21 @@ namespace Udp.NET.Server.Models
         public byte[] DisconnectBytes { get; protected set; }
         public byte[] PrefixTerminator { get; protected set; }
 
-        public ParamsUdpServer(int port, string connectionSuccessString = null, bool onlyEmitBytes = false, int pingIntervalSec = 120, string pingCharacters = "ping", string pongCharacters = "pong", bool useDisconnectBytes = true, byte[] disconnectBytes = null, string prefixTerminator = "\\") : base()
+        public ParamsUdpServerBytes(int port, string connectionSuccessString = null, bool onlyEmitBytes = false, int pingIntervalSec = 120, byte[] pingBytes = null, byte[] pongBytes = null, bool useDisconnectBytes = true, byte[] disconnectBytes = null, byte[] prefixTerminator = null) : base()
         {
             if (port <= 0)
             {
                 throw new ArgumentException("Port is not valid");
             }
 
-            if (string.IsNullOrEmpty(pingCharacters))
+            if (pingBytes == null || pingBytes.Length <= 0 || pingBytes.All(x => x == 0))
             {
-                throw new ArgumentException("Ping Characters are not valid");
+                pingBytes = Encoding.UTF8.GetBytes("ping");
             }
 
-            if (string.IsNullOrEmpty(pongCharacters))
+            if (pongBytes == null || pongBytes.Length <= 0 || pingBytes.All(x => x == 0))
             {
-                throw new ArgumentException("Pong Characters are not valid");
+                pongBytes = Encoding.UTF8.GetBytes("pong");
             }
 
             if (onlyEmitBytes && !string.IsNullOrWhiteSpace(connectionSuccessString))
@@ -38,20 +39,20 @@ namespace Udp.NET.Server.Models
                 throw new ArgumentException("onlyEmitBytes can not be true is a connectionSuccesString is specified");
             }
 
-            if (string.IsNullOrWhiteSpace(prefixTerminator))
+            if (prefixTerminator == null || prefixTerminator.Where(x => x != 0).ToArray().Length <= 0)
             {
-                throw new ArgumentException("Prefix Terminator is not valid");
+                prefixTerminator = Encoding.UTF8.GetBytes("\\");
             }
 
             Port = port;
-            PingBytes = Encoding.UTF8.GetBytes(pingCharacters);
-            PongBytes = Encoding.UTF8.GetBytes(pongCharacters);
             ConnectionSuccessString = connectionSuccessString;
+            PingBytes = pingBytes;
+            PongBytes = pongBytes;
             PingIntervalSec = pingIntervalSec;
             OnlyEmitBytes = onlyEmitBytes;
             UseDisconnectBytes = useDisconnectBytes;
             DisconnectBytes = disconnectBytes;
-            PrefixTerminator = Encoding.UTF8.GetBytes(prefixTerminator);
+            PrefixTerminator = prefixTerminator;
 
             if (UseDisconnectBytes && (DisconnectBytes == null || Statics.ByteArrayEquals(DisconnectBytes, Array.Empty<byte>())))
             {
