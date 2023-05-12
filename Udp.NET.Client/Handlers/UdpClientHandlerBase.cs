@@ -1,5 +1,5 @@
 ﻿using PHS.Networking.Enums;
-using PHS.Networking.Services;
+using PHS.Networking.Handlers;
 using PHS.Networking.Utilities;
 using System;
 using System.Linq;
@@ -13,21 +13,18 @@ using Udp.NET.Core.Events.Args;
 namespace Udp.NET.Client.Handlers
 {
     public abstract class UdpClientHandlerBase<T, U, V, W, Y> : 
-        CoreNetworkingGeneric<T, U, V, W, Y>,
-        ICoreNetworkingGeneric<T, U, V, Y>
+        HandlerClientBase<T, U, V, W, Y>
         where T : UdpConnectionEventArgs<Y>
         where U : UdpMessageEventArgs<Y>
         where V : UdpErrorEventArgs<Y>
         where W : ParamsUdpClient
         where Y : ConnectionUdpClient
     {
-        protected Y _connection;
-
         public UdpClientHandlerBase(W parameters) : base(parameters)
         {
         }
         
-        public virtual async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
+        public override async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -75,7 +72,7 @@ namespace Udp.NET.Client.Handlers
 
             return false;
         }
-        public virtual async Task<bool> DisconnectAsync(CancellationToken cancellationToken = default)
+        public override async Task<bool> DisconnectAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -117,7 +114,7 @@ namespace Udp.NET.Client.Handlers
             return false;
         }
 
-        public virtual async Task<bool> SendAsync(string message, CancellationToken cancellationToken = default)
+        public override async Task<bool> SendAsync(string message, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -156,7 +153,7 @@ namespace Udp.NET.Client.Handlers
 
             return false;
         }
-        public virtual async Task<bool> SendAsync(byte[] message, CancellationToken cancellationToken = default)
+        public override async Task<bool> SendAsync(byte[] message, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -283,18 +280,5 @@ namespace Udp.NET.Client.Handlers
         protected abstract T CreateConnectionEventArgs(UdpConnectionEventArgs<Y> args);
         protected abstract U CreateMessageEventArgs(UdpMessageEventArgs<Y> args);
         protected abstract V CreateErrorEventArgs(UdpErrorEventArgs<Y> args);
-
-        public override void Dispose()
-        {
-            DisconnectAsync().Wait();
-        }
-
-        public Y Connection
-        {
-            get
-            {
-                return _connection;
-            }
-        }
     }
 }

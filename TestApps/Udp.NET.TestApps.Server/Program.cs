@@ -5,7 +5,6 @@ using Udp.NET.Server;
 using Udp.NET.Server.Models;
 using Udp.NET.Server.Events.Args;
 using PHS.Networking.Enums;
-using System.Text;
 
 namespace Udp.NET.TestApps.Server
 {
