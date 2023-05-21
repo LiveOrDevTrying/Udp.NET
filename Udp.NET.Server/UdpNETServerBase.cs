@@ -52,7 +52,7 @@ namespace Udp.NET.Server
                 _connectionManager.AddConnection(connection.ConnectionId, connection);
             }
 
-            _handler.Receive(buffer.ToArray(), connection, args.CancellationToken);
+            _handler.Receive(buffer, connection, args.CancellationToken);
         }
         protected override void OnServerEvent(object sender, ServerEventArgs args)
         {
@@ -67,7 +67,7 @@ namespace Udp.NET.Server
                 switch (args.ServerEventType)
                 {
                     case ServerEventType.Start:
-                        _timerPing = new Timer(OnTimerPingTick, args.CancellationToken, 5 * 1000, 5 * 1000);
+                        _timerPing = new Timer(OnTimerPingTick, args.CancellationToken, 1000, 1000);
                         break;
                     case ServerEventType.Stop:
                         break;
@@ -86,20 +86,24 @@ namespace Udp.NET.Server
 
                 Task.Run(async () =>
                 {
-                    foreach (var connection in _connectionManager.GetAllConnections().Where(x => x.NextPing <= DateTime.UtcNow))
+                    Console.WriteLine("Running batch");
+
+                    foreach (var connection in _connectionManager.GetAllConnections().Where(x => !x.Disposed && x.NextPing <= DateTime.UtcNow))
                     {
                         try
                         {
                             if (connection.HasBeenPinged)
                             {
-                                await SendToConnectionAsync("No ping response - disconnected.", connection, (CancellationToken)state).ConfigureAwait(false);
-                                await DisconnectConnectionAsync(connection, (CancellationToken)state).ConfigureAwait(false);
+                                Console.WriteLine("Ping Disconnect");
+                                await _handler.DisconnectConnectionAsync(connection, (CancellationToken)state, "No ping response - disconnected.").ConfigureAwait(false);
                             }
                             else
                             {
+                                Console.WriteLine("Ping");
+
                                 connection.HasBeenPinged = true;
-                                connection.NextPing = DateTime.UtcNow.AddSeconds(_parameters.PingIntervalSec);
                                 await SendToConnectionAsync(_parameters.PingBytes, connection, (CancellationToken)state).ConfigureAwait(false);
+                                connection.NextPing = DateTime.UtcNow.AddSeconds(_parameters.PingIntervalSec);
                             }
                         }
                         catch (Exception ex)
@@ -108,7 +112,8 @@ namespace Udp.NET.Server
                             {
                                 Connection = connection,
                                 Exception = ex,
-                                Message = ex.Message
+                                Message = ex.Message,
+                                CancellationToken = (CancellationToken)state
                             }));
                         }
                     }

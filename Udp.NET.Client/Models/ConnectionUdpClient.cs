@@ -8,8 +8,10 @@ namespace Udp.NET.Client.Models
     {
         public Socket Socket { get; set; }
 
-        public virtual void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
+
             try
             {
                 Socket.Close();

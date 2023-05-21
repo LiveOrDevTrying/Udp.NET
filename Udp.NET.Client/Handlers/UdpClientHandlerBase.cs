@@ -20,8 +20,11 @@ namespace Udp.NET.Client.Handlers
         where W : ParamsUdpClient
         where Y : ConnectionUdpClient
     {
+        protected bool _isRunning;
+
         public UdpClientHandlerBase(W parameters) : base(parameters)
         {
+            _isRunning = true;
         }
         
         public override async Task<bool> ConnectAsync(CancellationToken cancellationToken = default)
@@ -34,6 +37,8 @@ namespace Udp.NET.Client.Handlers
                     {
                         await DisconnectAsync(cancellationToken).ConfigureAwait(false);
                     }
+
+                    _isRunning = true;
 
                     await CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
                     
@@ -66,9 +71,9 @@ namespace Udp.NET.Client.Handlers
                     Message = ex.Message,
                     CancellationToken = cancellationToken
                 }));
-
-                await DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }
+
+            await DisconnectAsync(cancellationToken).ConfigureAwait(false);
 
             return false;
         }
@@ -78,9 +83,11 @@ namespace Udp.NET.Client.Handlers
             {
                 if (_connection != null)
                 {
-                    if (_connection.Socket != null)
+                    if (!_connection.Disposed)
                     {
-                        if (_parameters.UseDisconnectBytes)
+                        _connection.Disposed = true;
+
+                        if (_connection.Socket != null && _parameters.UseDisconnectBytes)
                         {
                             await SendAsync(_parameters.DisconnectBytes, cancellationToken).ConfigureAwait(false);
                         }
@@ -93,11 +100,13 @@ namespace Udp.NET.Client.Handlers
                             Connection = _connection,
                             CancellationToken = cancellationToken
                         }));
+
+                        _connection = null;
+
+                        _isRunning = false;
+
+                        return true;
                     }
-
-                    _connection = null;
-
-                    return true;
                 }
             }
             catch (Exception ex)
@@ -121,7 +130,8 @@ namespace Udp.NET.Client.Handlers
                 if (_connection != null &&
                     _connection.Socket != null &&
                     _connection.Socket.Connected &&
-                    !cancellationToken.IsCancellationRequested)
+                    !cancellationToken.IsCancellationRequested &&
+                    !string.IsNullOrWhiteSpace(message))
                 {
                     var bytes = Encoding.UTF8.GetBytes(_connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).ToArray();
                     await _connection.Socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, cancellationToken).ConfigureAwait(false);
@@ -147,9 +157,9 @@ namespace Udp.NET.Client.Handlers
                     Message = ex.Message,
                     CancellationToken = cancellationToken
                 }));
-
-                await DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }
+
+            await DisconnectAsync(cancellationToken).ConfigureAwait(false);
 
             return false;
         }
@@ -160,7 +170,8 @@ namespace Udp.NET.Client.Handlers
                 if (_connection != null &&
                     _connection.Socket != null &&
                     _connection.Socket.Connected &&
-                    !cancellationToken.IsCancellationRequested)
+                    !cancellationToken.IsCancellationRequested &&
+                    message.Where(x => x != 0).Any())
                 {
                     var bytes = Encoding.UTF8.GetBytes(_connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).ToArray();
                     await _connection.Socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, cancellationToken).ConfigureAwait(false);
@@ -186,9 +197,9 @@ namespace Udp.NET.Client.Handlers
                     Message = ex.Message,
                     CancellationToken = cancellationToken
                 }));
-
-                await DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }
+
+            await DisconnectAsync(cancellationToken).ConfigureAwait(false);
 
             return false;
         }
@@ -226,6 +237,8 @@ namespace Udp.NET.Client.Handlers
                             }));
 
                             _connection = null;
+
+                            _isRunning = false;
                             return;
                         }
                         else if (_parameters.UsePingPong && Statics.ByteArrayEquals(buffer, _parameters.PingBytes))
@@ -280,5 +293,13 @@ namespace Udp.NET.Client.Handlers
         protected abstract T CreateConnectionEventArgs(UdpConnectionEventArgs<Y> args);
         protected abstract U CreateMessageEventArgs(UdpMessageEventArgs<Y> args);
         protected abstract V CreateErrorEventArgs(UdpErrorEventArgs<Y> args);
+
+        public bool IsRunning
+        {
+            get
+            {
+                return _isRunning;
+            }
+        }
     }
 }

@@ -125,7 +125,7 @@ namespace Udp.NET.Server.Handlers
         {
             try
             {
-                if (!connection.Disposed && _isRunning)
+                if (_isRunning && !cancellationToken.IsCancellationRequested && !string.IsNullOrWhiteSpace(message))
                 {
                     var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).ToArray();
                     await _server.SendAsync(bytes, bytes.Length, connection.IpEndpoint).ConfigureAwait(false);
@@ -151,9 +151,9 @@ namespace Udp.NET.Server.Handlers
                     Connection = connection,
                     CancellationToken = cancellationToken
                 }));
-
-                await DisconnectConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
             }
+
+            await DisconnectConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
 
             return false;
         }
@@ -161,7 +161,7 @@ namespace Udp.NET.Server.Handlers
         {
             try
             {
-                if (!connection.Disposed && _isRunning)
+                if (_isRunning && !cancellationToken.IsCancellationRequested && message.Where(x => x != 0).Any())
                 {
                     var bytes = Encoding.UTF8.GetBytes(connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).ToArray();
                     await _server.SendAsync(bytes, bytes.Length, connection.IpEndpoint).ConfigureAwait(false);
@@ -187,31 +187,41 @@ namespace Udp.NET.Server.Handlers
                     Connection = connection,
                     CancellationToken = cancellationToken
                 }));
-
-                await DisconnectConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
             }
+
+            await DisconnectConnectionAsync(connection, cancellationToken).ConfigureAwait(false);
 
             return false;
         }
-        public override async Task<bool> DisconnectConnectionAsync(Z connection, CancellationToken cancellationToken = default)
+        public override async Task<bool> DisconnectConnectionAsync(Z connection, CancellationToken cancellationToken = default, string disconnectMessage = "")
         {
             try
             {
-                if (_parameters.UseDisconnectBytes)
+                if (!connection.Disposed)
                 {
-                    await SendAsync(_parameters.DisconnectBytes, connection, cancellationToken).ConfigureAwait(false);
+                    connection.Disposed = true;
+
+                    if (!string.IsNullOrWhiteSpace(disconnectMessage))
+                    {
+                        await SendAsync(disconnectMessage, connection, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    if (_parameters.UseDisconnectBytes)
+                    {
+                        await SendAsync(_parameters.DisconnectBytes, connection, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    connection?.Dispose();
+
+                    FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
+                    {
+                        ConnectionEventType = ConnectionEventType.Disconnect,
+                        Connection = connection,
+                        CancellationToken = cancellationToken
+                    }));
+
+                    return true;
                 }
-
-                connection.Disposed = true;
-
-                FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
-                {
-                    ConnectionEventType = ConnectionEventType.Disconnect,
-                    Connection = connection,
-                    CancellationToken = cancellationToken
-                }));
-
-                return true;
             }
             catch (Exception ex)
             {
@@ -233,7 +243,7 @@ namespace Udp.NET.Server.Handlers
             {
                 if (_parameters.UseDisconnectBytes && Statics.ByteArrayEquals(message, _parameters.DisconnectBytes))
                 {
-                    connection.Disposed = true;
+                    connection?.Dispose();
 
                     FireEvent(this, CreateConnectionEventArgs(new UdpConnectionServerBaseEventArgs<Z>
                     {
@@ -279,11 +289,6 @@ namespace Udp.NET.Server.Handlers
         protected virtual void FireEvent(object sender, UdpReceivedEventArgs args)
         {
             _receivedEvent?.Invoke(sender, args);
-        }
-
-        public override void Dispose()
-        {
-            Stop();
         }
 
         public event ReceivedEvent ReceivedEvent

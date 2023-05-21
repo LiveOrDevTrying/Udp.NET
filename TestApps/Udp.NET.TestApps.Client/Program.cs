@@ -1,5 +1,6 @@
 ﻿using PHS.Networking.Enums;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,9 +13,9 @@ namespace Udp.NET.TestApps.Client
 {
     class Program
     {
-        private static List<IUdpNETClient> _clients = new List<IUdpNETClient>();
-        private static Timer _timer;
+        private static ConcurrentDictionary<int, IUdpNETClient> _clients = new ConcurrentDictionary<int, IUdpNETClient>();
         private static int _max;
+        private static bool _isDone;
 
         static async Task Main(string[] args)
         {
@@ -40,7 +41,7 @@ namespace Udp.NET.TestApps.Client
 
             Console.ReadLine();
 
-            _timer = new Timer(OnTimerTick, null, 0, CalculateNumberOfUsersPerMinute(numberUsers));
+            _ = new Timer(OnTimerTick, null, 0, CalculateNumberOfUsersPerMinute(numberUsers));
 
             while (true)
             {
@@ -48,7 +49,7 @@ namespace Udp.NET.TestApps.Client
 
                 if (line == "restart")
                 {
-                    foreach (var item in _clients.ToList())
+                    foreach (var item in _clients.Values.ToList())
                     {
                         if (item != null)
                         {
@@ -58,22 +59,27 @@ namespace Udp.NET.TestApps.Client
                 }
                 else
                 {
-                    await _clients.ToList().Where(x => x != null && x.IsRunning).OrderBy(x => Guid.NewGuid()).First().SendAsync(line);
+                    await _clients.Values.ToList().Where(x => x.IsRunning).OrderBy(x => Guid.NewGuid()).First().SendAsync(line);
                 }
             }
         }
 
         private static void OnTimerTick(object state)
         {
-            if (_clients.Count < _max)
+            if (!_isDone && _clients.Values.Where(x => x.IsRunning).Count() < _max)
             {
                 var client = new UdpNETClient(new ParamsUdpClient("localhost", 8989, token: "testToken"));
                 client.ConnectionEvent += OnConnectionEvent;
                 client.MessageEvent += OnMessageEvent;
                 client.ErrorEvent += OnErrorEvent;
-                _clients.Add(client);
+                _clients.TryAdd(client.GetHashCode(), client);
 
                 Task.Run(async () => await client.ConnectAsync());
+
+                if (_clients.Values.Where(x => x.IsRunning).Count() >= _max)
+                {
+                    _isDone = true;
+                }
             }
         }
         private static void OnErrorEvent(object sender, UdpErrorClientEventArgs args)
@@ -82,15 +88,13 @@ namespace Udp.NET.TestApps.Client
         }
         private static void OnConnectionEvent(object sender, UdpConnectionClientEventArgs args)
         {
-            Console.WriteLine(args.ConnectionEventType);
-
             switch (args.ConnectionEventType)
             {
                 case ConnectionEventType.Connected:
                     break;
                 case ConnectionEventType.Disconnect:
                     var client = (IUdpNETClient)sender;
-                    _clients.Remove(client);
+                    _clients.TryRemove(_clients.FirstOrDefault(x => x.Key == client.GetHashCode()));
 
                     client.ConnectionEvent -= OnConnectionEvent;
                     client.MessageEvent -= OnMessageEvent;
@@ -101,6 +105,8 @@ namespace Udp.NET.TestApps.Client
                 default:
                     break;
             }
+            
+            Console.WriteLine(args.ConnectionEventType + " " + _clients.Values.Where(x => x.IsRunning).Count());
         }
         private static void OnMessageEvent(object sender, UdpMessageClientEventArgs args)
         {
@@ -109,7 +115,7 @@ namespace Udp.NET.TestApps.Client
                 case MessageEventType.Sent:
                     break;
                 case MessageEventType.Receive:
-                    Console.WriteLine(args.Message + " : " + +_clients.Where(x => x != null && x.IsRunning).Count());
+                    //Console.WriteLine(args.Message + " : " + +_clients.Where(x => x != null && x.IsRunning).Count());
                     break;
                 default:
                     break;
