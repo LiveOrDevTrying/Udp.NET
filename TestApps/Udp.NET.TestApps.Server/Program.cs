@@ -14,12 +14,12 @@ namespace Udp.NET.TestApps.Server
 
         static async Task Main(string[] args)
         {
-            _authServer = new UdpNETServerAuth<Guid>(new ParamsUdpServerAuth(8989, "Connected Successfully", "Not authorized"), new MockUserService()); ;
+            _authServer = new UdpNETServerAuth<Guid>(new ParamsUdpServerAuth(8989, "Connected Successfully", "Not authorized", pingIntervalSec: 10), new MockUserService()); ;
             _authServer.MessageEvent += OnMessageEvent;
             _authServer.ServerEvent += OnServerEvent;
             _authServer.ConnectionEvent += OnConnectionEvent;
             _authServer.ErrorEvent += OnErrorEvent;
-            _authServer.Start();
+            await _authServer.StartAsync();
 
             while (true)
             {
@@ -34,7 +34,7 @@ namespace Udp.NET.TestApps.Server
 
         private static void OnErrorEvent(object sender, UdpErrorServerAuthEventArgs<Guid> args)
         {
-            Console.WriteLine(args.Message);
+            //Console.WriteLine(args.Message);
         }
 
         private static void OnConnectionEvent(object sender, UdpConnectionServerAuthEventArgs<Guid> args)

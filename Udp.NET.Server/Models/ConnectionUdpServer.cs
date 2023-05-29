@@ -9,6 +9,5 @@ namespace Udp.NET.Server.Models
         public IPEndPoint IpEndpoint { get; set; }
         public bool HasBeenPinged { get; set; }
         public DateTime NextPing { get; set; }
-        public bool Disposed { get; set; }
     }
 }

@@ -28,7 +28,7 @@ namespace Udp.NET.Client
         {
             get
             {
-                return _handler.Connection?.Socket.IsBound ?? false;
+                return _handler.IsRunning;
             }
         }
     }
