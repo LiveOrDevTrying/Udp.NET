@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\UDP.NET.Server\Udp.NET.Server.csproj" />
+	  <PackageReference Include="Udp.NET" Version="7.0.*" />
   </ItemGroup>
 
 </Project>
