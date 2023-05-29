@@ -23,8 +23,8 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Resources\PHS\PHS.Networking\PHS.Networking.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="PHS.Networking" Version="7.0.*" />
+	</ItemGroup>
 
 </Project>

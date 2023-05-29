@@ -17,8 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Resources\PHS\PHS.Networking.Server\PHS.Networking.Server.csproj" />
-    <ProjectReference Include="..\UDP.NET.Core\Udp.NET.Core.csproj" />
+	<PackageReference Include="PHS.Networking.Server" Version="7.0.*" />
+	<PackageReference Include="Udp.NET.Core" Version="7.0.*" />
   </ItemGroup>
 
   <ItemGroup>

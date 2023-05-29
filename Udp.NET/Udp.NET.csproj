@@ -24,8 +24,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Udp.NET.Client\Udp.NET.Client.csproj" />
-    <ProjectReference Include="..\Udp.NET.Server\Udp.NET.Server.csproj" />
+      <PackageReference Include="Udp.NET.Client" Version="7.0.*" />
+	  <PackageReference Include="Udp.NET.Server" Version="7.0.*" />
   </ItemGroup>
 
 </Project>
