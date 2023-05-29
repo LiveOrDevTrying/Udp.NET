@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Version>7.0.0</Version>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <Version>2.2.0</Version>
     <Authors>Rob Engel - LiveOrDevTrying</Authors>
     <Company>Rob Engel - LiveOrDevTrying - Pixel Horror Studios</Company>
     <Description>The core module for a simple async Udp Server and Udp Client with authentication. This package is used by both Udp.NET.Client and Udp.NET.Server.</Description>
@@ -24,7 +24,7 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="PHS.Networking" Version="7.0.*" />
+		<PackageReference Include="PHS.Networking" Version="2.2.*" />
 	</ItemGroup>
 
 </Project>
