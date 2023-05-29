@@ -100,8 +100,7 @@ namespace Udp.NET.Server.Handlers
             {
                 try
                 {
-                    var epFrom = new IPEndPoint(IPAddress.Any, _parameters.Port);
-                    var data = await _server.ReceiveAsync().ConfigureAwait(false);
+                    var data = await _server.ReceiveAsync(cancellationToken).ConfigureAwait(false);
 
                     _receivedEvent?.Invoke(this, new UdpReceivedEventArgs
                     {
