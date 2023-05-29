@@ -100,7 +100,7 @@ namespace Udp.NET.Server.Handlers
             {
                 try
                 {
-                    var data = await _server.ReceiveAsync(cancellationToken).ConfigureAwait(false);
+                    var data = await _server.ReceiveAsync().ConfigureAwait(false);
 
                     _receivedEvent?.Invoke(this, new UdpReceivedEventArgs
                     {
