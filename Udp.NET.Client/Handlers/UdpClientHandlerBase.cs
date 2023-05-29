@@ -135,7 +135,7 @@ namespace Udp.NET.Client.Handlers
                     !string.IsNullOrWhiteSpace(message))
                 {
                     var bytes = Encoding.UTF8.GetBytes(_connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(Encoding.UTF8.GetBytes(message)).ToArray();
-                    await _connection.Socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, cancellationToken).ConfigureAwait(false);
+                    _connection.Socket.Send(bytes, SocketFlags.None);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageEventArgs<Y>
                     {
@@ -175,7 +175,7 @@ namespace Udp.NET.Client.Handlers
                     message.Where(x => x != 0).Any())
                 {
                     var bytes = Encoding.UTF8.GetBytes(_connection.ConnectionId).Concat(_parameters.PrefixTerminator).Concat(message).ToArray();
-                    await _connection.Socket.SendAsync(new ArraySegment<byte>(bytes), SocketFlags.None, cancellationToken).ConfigureAwait(false);
+                    _connection.Socket.Send(bytes, SocketFlags.None);
 
                     FireEvent(this, CreateMessageEventArgs(new UdpMessageEventArgs<Y>
                     { 
@@ -218,7 +218,7 @@ namespace Udp.NET.Client.Handlers
                     }
 
                     var buffer = new byte[_connection.Socket.Available];
-                    var result = await _connection.Socket.ReceiveAsync(buffer, SocketFlags.None, cancellationToken).ConfigureAwait(false);
+                    var result = _connection.Socket.Receive(buffer);
 
                     var prefix = Statics.ByteArraySeparate(buffer, _parameters.PrefixTerminator);
 
