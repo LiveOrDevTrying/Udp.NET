@@ -3,6 +3,7 @@ using PHS.Networking.Handlers;
 using PHS.Networking.Utilities;
 using System;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -40,7 +41,7 @@ namespace Udp.NET.Client.Handlers
 
                     _isRunning = true;
 
-                    await CreateConnectionAsync(cancellationToken).ConfigureAwait(false);
+                    CreateConnection();
                     
                     if (_connection != null && _connection.Socket.Connected && !cancellationToken.IsCancellationRequested)
                     {
@@ -271,7 +272,7 @@ namespace Udp.NET.Client.Handlers
             await DisconnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        protected virtual async Task CreateConnectionAsync(CancellationToken cancellationToken)
+        protected virtual void CreateConnection()
         {
             // Establish the remote endpoint for the socket.  
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
@@ -279,7 +280,7 @@ namespace Udp.NET.Client.Handlers
                 ReceiveTimeout = 60000
             };
 
-            await socket.ConnectAsync(_parameters.Host, _parameters.Port, cancellationToken).ConfigureAwait(false);
+            socket.Connect(_parameters.Host, _parameters.Port);
             
             _connection = CreateConnection(new ConnectionUdpClient
             {
