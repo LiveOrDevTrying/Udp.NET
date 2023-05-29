@@ -101,8 +101,6 @@ namespace Udp.NET.Client.Handlers
                             CancellationToken = cancellationToken
                         }));
 
-                        _connection = null;
-
                         _isRunning = false;
 
                         return true;
@@ -119,6 +117,8 @@ namespace Udp.NET.Client.Handlers
                     CancellationToken = cancellationToken
                 }));
             }
+
+            _isRunning = false;
 
             return false;
         }
@@ -235,8 +235,6 @@ namespace Udp.NET.Client.Handlers
                                 Connection = _connection,
                                 CancellationToken = cancellationToken
                             }));
-
-                            _connection = null;
 
                             _isRunning = false;
                             return;

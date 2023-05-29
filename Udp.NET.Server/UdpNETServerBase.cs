@@ -86,21 +86,16 @@ namespace Udp.NET.Server
 
                 Task.Run(async () =>
                 {
-                    Console.WriteLine("Running batch");
-
                     foreach (var connection in _connectionManager.GetAllConnections().Where(x => !x.Disposed && x.NextPing <= DateTime.UtcNow))
                     {
                         try
                         {
                             if (connection.HasBeenPinged)
                             {
-                                Console.WriteLine("Ping Disconnect");
                                 await _handler.DisconnectConnectionAsync(connection, (CancellationToken)state, "No ping response - disconnected.").ConfigureAwait(false);
                             }
                             else
                             {
-                                Console.WriteLine("Ping");
-
                                 connection.HasBeenPinged = true;
                                 await SendToConnectionAsync(_parameters.PingBytes, connection, (CancellationToken)state).ConfigureAwait(false);
                                 connection.NextPing = DateTime.UtcNow.AddSeconds(_parameters.PingIntervalSec);
@@ -127,23 +122,6 @@ namespace Udp.NET.Server
         protected abstract T CreateConnectionEventArgs(UdpConnectionServerBaseEventArgs<Z> args);
         protected abstract U CreateMessageEventArgs(UdpMessageServerBaseEventArgs<Z> args);
         protected abstract V CreateErrorEventArgs(UdpErrorServerBaseEventArgs<Z> args);
-
-        protected override void FireEvent(object sender, ServerEventArgs args)
-        {
-            base.FireEvent(this, args);
-        }
-        protected override void FireEvent(object sender, T args)
-        {
-            base.FireEvent(this, args);
-        }
-        protected override void FireEvent(object sender, U args)
-        {
-            base.FireEvent(this, args);
-        }
-        protected override void FireEvent(object sender, V args)
-        {
-            base.FireEvent(this, args);
-        }
 
         public override void Dispose()
         {
