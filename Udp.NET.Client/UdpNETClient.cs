@@ -19,17 +19,9 @@ namespace Udp.NET.Client
         {
         }
 
-        protected override UdpClientHandler CreateTcpClientHandler()
+        protected override UdpClientHandler CreateHandler()
         {
             return new UdpClientHandler(_parameters);
-        }
-
-        public bool IsRunning
-        {
-            get
-            {
-                return _handler.IsRunning;
-            }
         }
     }
 }
