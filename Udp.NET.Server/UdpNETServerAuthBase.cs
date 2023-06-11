@@ -96,9 +96,9 @@ namespace Udp.NET.Server
                     {
                         Task.Run(async () =>
                         {
-                            if (args.Message.Length > 0 && await _userService.IsValidTokenAsync(args.Message, args.CancellationToken).ConfigureAwait(false))
+                            if (args.Message.Length > 0 && await _userService.IsValidTokenAsync(args.Bytes, args.CancellationToken).ConfigureAwait(false))
                             {
-                                args.Connection.UserId = await _userService.GetIdAsync(args.Message, args.CancellationToken).ConfigureAwait(false);
+                                args.Connection.UserId = await _userService.GetIdAsync(args.Bytes, args.CancellationToken).ConfigureAwait(false);
                                 args.Connection.Authorized = true;
                                 _connectionManager.AddUser(args.Connection);
 
