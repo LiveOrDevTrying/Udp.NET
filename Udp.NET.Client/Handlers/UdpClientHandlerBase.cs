@@ -21,8 +21,6 @@ namespace Udp.NET.Client.Handlers
         where W : ParamsUdpClient
         where Y : ConnectionUdpClient
     {
-        protected bool _isRunning;
-
         public UdpClientHandlerBase(W parameters) : base(parameters)
         {
             _isRunning = true;
@@ -145,9 +143,9 @@ namespace Udp.NET.Client.Handlers
                         Bytes = bytes,
                         CancellationToken = cancellationToken
                     }));
-
-                    return true;
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
@@ -185,9 +183,9 @@ namespace Udp.NET.Client.Handlers
                         Bytes = bytes,
                         CancellationToken = cancellationToken
                     }));
-
-                    return true;
                 }
+
+                return true;
             }
             catch (Exception ex)
             {
